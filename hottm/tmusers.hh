@@ -32,6 +32,8 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
+#include "tmdefs.hh"
+
 #include <boost/date_time.hpp>
 #include "boost/date_time/posix_time/posix_time.hpp"
 using namespace boost::posix_time;
@@ -39,20 +41,56 @@ using namespace boost::gregorian;
 
 namespace tmdb {
 
+
 class TMUser
 {
-public:
+
+  public:
+
+  /**
+   * @brief The Gender enum maps the TM database numeric gender.
+   */
+  enum class Gender: int
+  {
+    MALE = 1,
+    FEMALE = 2,
+    SELF_DESCRIBE = 3,
+    PREFER_NOT = 4
+  };
+
+  /**
+   * @brief The Role enum maps the TM database numeric role.
+   */
+  enum class Role: int
+  {
+    READ_ONLY = 1,
+    MAPPER = 2,
+    ADMIN = 3
+  };
+
+  /**
+   * @brief The MappingLevel enum maps the TM database numeric level.
+   */
+  enum class MappingLevel: int
+  {
+    BEGINNER = 1,
+    INTERMEDIATE = 2,
+    ADVANCED = 3
+  };
+
     TMUser(pqxx::result::const_iterator &row);
+
 //protected:
-    long id;
+    TaskingManagerIdType id;
 //     validation_message boolean NOT NULL,
+    std::string name;
     std::string username;
-    int role;
-    int mapping_level;
+    Gender gender;
+    Role role;
+    MappingLevel mapping_level;
     int tasks_mapped;
     int tasks_validated;
     int tasks_invalidated;
-    std::vector<int> projects_mapped;
 //     email_address character varying,
 //     is_email_verified boolean,
 //     is_expert boolean,
@@ -62,18 +100,17 @@ public:
 //     slack_id character varying,
 //     skype_id character varying,
 //     irc_id character varying,
-    std::string name;
 //     city character varying,
 //     country character varying,
 //     picture_url character varying,
-//     gender integer,
 //     self_description_gender character varying,
 //     default_editor character varying NOT NULL,
 //     mentions_notifications boolean NOT NULL,
 //     comments_notifications boolean NOT NULL,
 //     projects_notifications boolean NOT NULL,
     ptime date_registered;
-    ptime last_validation_date;    
+    ptime last_validation_date;
+    std::vector<int> projects_mapped;
 };
 
 } // EOF tmdb namespace

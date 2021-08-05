@@ -77,14 +77,17 @@ CREATE TABLE public.ground_data (
 
 CREATE TABLE public.users (
     id integer NOT NULL,
-    name text,
-    tm_registration timestamp with time zone,
-    osm_registration timestamp with time zone,
+    username varchar,
+    name varchar,
+    date_registered timestamp,
+    last_validation_date timestamp,
+    osm_registration timestamp,
     tasks_mapped integer,
     tasks_validated integer,
     tasks_invalidated integer,
     projects_mapped integer[],
-    gender text,
+    gender int4,
+    "role" int4,
     home public.geometry(Point,4326)
 );
 

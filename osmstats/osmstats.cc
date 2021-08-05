@@ -130,8 +130,8 @@ QueryOSMStats::connect(const std::string &dburl)
             return false;
         }
     } catch (const std::exception &e) {
-	    log_error(_(" Couldn't open database connection to %1% %2%"), dburl, e.what());
-	    return false;
+            log_error(_(" Couldn't open database connection to %1% %2%"), dburl, e.what());
+            return false;
    }
 }
 
@@ -438,6 +438,107 @@ RawChangeset::dump(void)
     log_debug(_("Verified: \t\t %1%"), verified);
     //log_debug(_("Updated At: \t\t %1%"). to_simple_string(updated_at));
 }
+
+QueryOSMStats::SyncResult QueryOSMStats::syncUsers( const std::vector<TMUser>& users )
+{
+  SyncResult syncResult;
+  std::vector<TaskingManagerIdType> updatedIds;
+  std::vector<TaskingManagerIdType> currentIds;
+
+  std::string sql {  "SELECT id FROM users" };
+
+  pqxx::result result = worker->exec( "SELECT id FROM users" );
+  for(const auto& row: std::as_const( result ) ) {
+      currentIds.push_back( row.at( 0 ).as( TaskingManagerIdType( 0 ) ) );
+  }
+
+  for( const auto &user: std::as_const( users ) )
+  {
+      const TaskingManagerIdType currentUserId { user.id };
+
+      const auto username { worker->conn().quote( user.username ) };
+      const auto name { worker->conn().quote( user.name ) };
+      const auto date_registered { worker->conn().quote( to_iso_string( user.date_registered ) ) };
+      const auto last_validation_date { worker->conn().quote( to_iso_string( user.last_validation_date ) ) };
+      const auto task_mapped { worker->conn().quote( user.tasks_mapped) };
+      const auto task_validated { worker->conn().quote( user.tasks_validated ) };
+      const auto task_invalidated { worker->conn().quote( user.tasks_invalidated ) };
+      const int gender { static_cast<int>( user.gender ) };
+      const int role { static_cast<int>( user.role ) };
+      std::string project_mapped { "'{" };
+      for ( const auto &elem: std::as_const( user.projects_mapped ) ) {
+          project_mapped += elem;
+          if ( elem != user.projects_mapped.back() )
+          {
+              project_mapped += ",";
+            }
+      }
+      project_mapped += "}'";
+
+      // If the id exists it is an update
+      if ( std::find( currentIds.begin(), currentIds.end(), user.id ) != currentIds.end() ) {
+              const std::string sql { str( boost::format( R"sql(
+                  UPDATE users SET
+                      username = %2,
+                      name = %3,
+                      date_registered = %4,
+                      last_validation_date = %5,
+                      tasks_mapped = %6,
+                      tasks_validated = %7,
+                      tasks_invalidated = %8,
+                      project_mapped = %9,
+                      gender = %10,
+                      "role" = %11
+                  WHERE id = %11
+                )sql" )
+                                           % currentUserId
+                                           % username
+                                           % name
+                                           % date_registered
+                                           % last_validation_date
+                                           % task_mapped
+                                           % task_validated
+                                           % task_invalidated
+                                           % project_mapped
+                                           % gender
+                                           % role
+                                           )
+                                    };
+
+              updatedIds.push_back( user.id );
+              syncResult.updated += 1;
+            } else {
+              const std::string sql { str( boost::format( R"sql(
+                  INSERT INTO users (
+                    id,
+                    username,
+                    name,
+                    date_registered,
+                    tasks_mapped,
+                    tasks_validated,
+                    tasks_invalidated
+                    )
+                    VALUES ( %1, %2, %3, %4, %5, %6, %7)
+                )sql" )
+                                           % currentUserId
+                                           % username
+                                           % name
+                                           % date_registered
+                                           % last_validation_date
+                                           % task_mapped
+                                           % task_validated
+                                           % task_invalidated
+                                           % project_mapped
+                                           % gender
+                                           % role
+                                           )
+                                    };
+              syncResult.created += 1;
+            }
+        }
+  return syncResult;
+};
+
 
 }       // EOF osmstatsdb
 

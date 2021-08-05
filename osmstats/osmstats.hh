@@ -38,11 +38,13 @@
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 
-// #include "hotosm.hh"
 #include "osmstats/changeset.hh"
 #include "osmstats/osmchange.hh"
+#include "hottm/tmdefs.hh"
 
 using namespace apidb;
+using namespace tmdb;
+
 
 // Forward declarations
 namespace changeset {
@@ -206,6 +208,28 @@ class QueryOSMStats : public apidb::QueryStats
         // FIXME: this should return a real value
         return 0;
     }
+
+    /**
+     * @brief The SyncResult struct represents the result of a synchronization operation.
+     */
+    struct SyncResult
+    {
+      unsigned long created = 0;
+      unsigned long updated = 0;
+      unsigned long deleted = 0;
+
+      bool operator==(const SyncResult& other) const {
+        return created == other.created && updated == other.updated && deleted == other.deleted;
+      }
+    };
+
+    /**
+     * @brief syncUsers synchronize users from TM DB into Underpass DB
+     * @param users list of users from TM DB to be synced.
+     * @return a SyncResult object
+     */
+    SyncResult syncUsers( const std::vector<TMUser>& users );
+
     std::string db_url;
     std::shared_ptr<pqxx::connection> sdb;
     std::vector<RawUser> users;        ///< All the raw user data

@@ -37,6 +37,7 @@
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 
+#include "hottm/tmdefs.hh"
 #include "hottm/tmusers.hh"
 #include "hottm/tmteams.hh"
 #include "hottm/tmprojects.hh"
@@ -47,19 +48,24 @@ class TaskingManager
 {
 public:
     bool connect(std::string &database);
-    std::shared_ptr<std::vector<TMUser>> getUsers(void) { return getUsers(0); };
-    std::shared_ptr<std::vector<TMUser>> getUsers(long userid);
-    std::shared_ptr<std::vector<TMTeam>> getTeams(void) { return getTeams(0); };
-    std::shared_ptr<std::vector<TMTeam>> getTeams(long teamid);
-    std::shared_ptr<std::vector<long>> getTeamMembers(long teamid, bool active);
-    std::shared_ptr<std::vector<TMProject>> getProjects(void) { return getProjects(0); };
-    std::shared_ptr<std::vector<long>> getProjectTeams(long projectid);
-    std::shared_ptr<std::vector<TMProject>> getProjects(long projectid);
+    /**
+     * @brief Retrieve the users from TM DB.
+     * @param userId, optional user id, default value of 0 synchronizes all users.
+     * @return a vector of TMUser objects.
+     */
+    std::vector<TMUser> getUsers( TaskingManagerIdType userId = 0 );
+    std::vector<TMTeam> getTeams(void) { return getTeams(0); };
+    std::vector<TMTeam> getTeams(long teamid);
+    std::vector<TaskingManagerIdType> getTeamMembers(long teamid, bool active);
+    std::vector<TMProject> getProjects(void) { return getProjects(0); };
+    std::vector<TaskingManagerIdType> getProjectTeams(long projectid);
+    std::vector<TMProject> getProjects(TaskingManagerIdType projectid);
+
 private:
-    pqxx::connection *db;
-    pqxx::work *worker;
+    pqxx::connection *db = nullptr;
+    pqxx::work *worker = nullptr;
 };
-    
+
 } // EOF tmdb namespace
 
 #endif  // EOF __HOTTM_HH__

@@ -40,16 +40,26 @@ namespace tmdb {
 
 TMUser::TMUser(pqxx::result::const_iterator &row)
 {
-    id = std::stol(pqxx::to_string(row[0]));
-    username = pqxx::to_string(row[1]);
-    role = std::stoi(pqxx::to_string(row[2]));
-    mapping_level = std::stoi(pqxx::to_string(row[3]));
-    tasks_mapped = std::stoi(pqxx::to_string(row[4]));
-    tasks_validated = std::stoi(pqxx::to_string(row[5]));
-    tasks_invalidated = std::stoi(pqxx::to_string(row[6]));
-    name = pqxx::to_string(row[7]);
-    // ptime date_registered;
-    // ptime last_validation_date;
+    id = row.at( "id" ).as( TaskingManagerIdType( 0 ) );
+    username = row.at( "username" ).as( std::string( ) );
+    name = row.at( "name" ).as( std::string( ) );
+    role = static_cast<Role>( row.at( "role" ).as( int( 0 ) ) );
+    gender = static_cast<Gender>( row.at( "gender" ).as( int( 0 ) ) );
+    mapping_level = static_cast<MappingLevel>( row.at( "mapping_level" ).as( int( 0 ) ) );
+    tasks_mapped = row.at( "tasks_mapped" ).as( int( 0 ) );
+    tasks_validated = row.at( "tasks_validated" ).as( int( 0 ) );
+    tasks_invalidated= row.at( "tasks_invalidated" ).as( int( 0 ) );
+    date_registered = time_from_string( row.at( "date_registered" ).as( std::string( ) ) );
+    last_validation_date = time_from_string( row.at( "last_validation_date" ).as( std::string( ) ) );
+    auto arr = row.at( "projects_mapped" ).as_array();
+    std::pair<pqxx::array_parser::juncture, std::string> elem;
+    do
+    {
+        elem = arr.get_next();
+        if (elem.first == pqxx::array_parser::juncture::string_value)
+            projects_mapped.push_back( atoi( elem.second.c_str() ) );
+    }
+    while (elem.first != pqxx::array_parser::juncture::done);
 }
 
 } // EOF tmdb namespace

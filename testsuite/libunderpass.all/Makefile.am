@@ -25,12 +25,12 @@ AM_CPPFLAGS = -I$(top_srcdir) \
 
 check_PROGRAMS =  \
 	val-test \
+	tm-test \
 	under-test
 #	rep-test
 #	stats-test
 #	change-test
 #	hotosm-test
-#	tm-test
 #	geo-test
 
 BOOST_LIBS = \
@@ -73,11 +73,10 @@ hotosm_test_SOURCES = hotosm-test.cc
 hotosm_test_LDFLAGS = -L../..
 hotosm_test_LDADD = -lpqxx -lunderpass  $(BOOST_LIBS)
 
-# FIXME: disabled because broken
 # Test the TM DB classes
-#tm_test_SOURCES = tm-test.cc
-#tm_test_LDFLAGS = -L../..
-#tm_test_LDADD = -lpqxx -lunderpass  $(BOOST_LIBS)
+tm_test_SOURCES = tm-test.cc
+tm_test_LDFLAGS = -L../..
+tm_test_LDADD = -lpqxx -lunderpass  $(BOOST_LIBS)
 
 # Test the OSM Stats class
 #stats_test_SOURCES = stats-test.cc
