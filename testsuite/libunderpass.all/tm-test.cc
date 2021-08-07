@@ -19,15 +19,15 @@
 
 #include <dejagnu.h>
 #include <iostream>
-#include <string>
 #include <pqxx/pqxx>
+#include <string>
 
 #include "hottm.hh"
 
-#include <boost/date_time.hpp>
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/date_time/gregorian/gregorian.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/filesystem/path.hpp"
+#include <boost/date_time.hpp>
 
 using namespace tmdb;
 using namespace boost::posix_time;
@@ -36,63 +36,65 @@ using namespace boost::filesystem;
 
 TestState runtest;
 
-class TestTM : public TaskingManager
-{
-    public:
+class TestTM : public TaskingManager {
+  public:
+    //! Clear the test DB and fill it with with initial test data
+    bool
+    init_test_case() {
+        const auto dbconn{getenv("UNDERPASS_TEST_DB_CONN")
+                              ? getenv("UNDERPASS_TEST_DB_CONN")
+                              : ""};
+        const auto source_tree_root{
+            std::string(getenv("UNDERPASS_SOURCE_TREE_ROOT")
+                            ? getenv("UNDERPASS_SOURCE_TREE_ROOT")
+                            : ".")};
 
-        //! Clear the test DB and fill it with with initial test data
-        bool
-        init_test_case( )
+        const std::string test_db{"taskingmanager_tm_test"};
+
         {
-            const auto dbconn { getenv( "UNDERPASS_TEST_DB_CONN" ) ? getenv( "UNDERPASS_TEST_DB_CONN" ) : "" };
-            const auto source_tree_root { std::string( getenv( "UNDERPASS_SOURCE_TREE_ROOT" ) ? getenv( "UNDERPASS_SOURCE_TREE_ROOT" ) : "." ) };
+            pqxx::connection conn{dbconn};
+            pqxx::nontransaction worker{conn};
+            worker.exec0("DROP DATABASE IF EXISTS " + test_db);
+            worker.exec0("CREATE DATABASE " + test_db);
+            worker.commit();
+        }
 
-            const std::string test_db { "taskingmanager_tm_test"  };
+        // Connect
+        assert(connect(test_db));
 
-            {
-                pqxx::connection conn { dbconn };
-                pqxx::nontransaction worker { conn };
-                worker.exec0( "DROP DATABASE IF EXISTS " + test_db );
-                worker.exec0( "CREATE DATABASE " + test_db );
-                worker.commit();
-            }
+        getWorker()->exec0("CREATE EXTENSION postgis");
 
-            // Connect
-            assert( connect( test_db ) );
+        // Create schema
+        // TODO: get absolute base path
+        const path base_path{source_tree_root / "testsuite"};
+        const auto schema_path{base_path / "testdata" /
+                               "taskingmanager_schema.sql"};
+        std::ifstream schema_definition(schema_path);
+        std::string sql((std::istreambuf_iterator<char>(schema_definition)),
+                        std::istreambuf_iterator<char>());
 
-            getWorker()->exec0( "CREATE EXTENSION postgis" );
+        assert(!sql.empty());
+        getWorker()->exec0(sql);
 
-            // Create schema
-            // TODO: get absolute base path
-            const path base_path { source_tree_root / "testsuite" };
-            const auto schema_path { base_path / "testdata" / "taskingmanager_schema.sql" };
-            std::ifstream schema_definition( schema_path );
-            std::string sql( ( std::istreambuf_iterator<char>( schema_definition ) ),
-                             std::istreambuf_iterator<char>() );
+        // Load a minimal data set for testing
+        const auto data_path{base_path / "testdata" /
+                             "taskingmanager_test_data.sql"};
+        std::ifstream data_definition(data_path);
+        std::string data_sql((std::istreambuf_iterator<char>(data_definition)),
+                             std::istreambuf_iterator<char>());
 
-            assert( ! sql.empty() );
-            getWorker()->exec0( sql );
+        assert(!data_sql.empty());
+        getWorker()->exec0(data_sql);
 
-            // Load a minimal data set for testing
-            const auto data_path { base_path / "testdata" / "taskingmanager_test_data.sql" };
-            std::ifstream data_definition( data_path );
-            std::string data_sql( ( std::istreambuf_iterator<char>( data_definition ) ),
-                                  std::istreambuf_iterator<char>() );
-
-            assert( ! data_sql.empty() );
-            getWorker()->exec0( data_sql );
-
-            return true;
-        };
+        return true;
+    };
 };
 
-
 int
-main( int argc, char *argv[] )
-{
+main(int argc, char *argv[]) {
     TestTM testtm;
 
-    testtm.init_test_case( );
+    testtm.init_test_case();
 
     std::vector<TaskingManagerIdType> retl;
     std::vector<TMUser> retu;
@@ -103,47 +105,43 @@ main( int argc, char *argv[] )
     // TODO: check actual values
     retu = testtm.getUsers();
 
-    if ( retu.size() > 0 &&
-         retu.at( 0 ).id > 0 &&
-         !retu.at( 0 ).username.empty() &&
-         retu.at( 0 ).tasks_mapped >= 0 ) {
-        runtest.pass( "taskingManager::getUsers()" );
+    if (retu.size() > 0 && retu.at(0).id > 0 && !retu.at(0).username.empty() &&
+        retu.at(0).tasks_mapped >= 0) {
+        runtest.pass("taskingManager::getUsers()");
     } else {
-        runtest.fail( "taskingManager::getUsers()" );
+        runtest.fail("taskingManager::getUsers()");
     }
 
-    rett  = testtm.getTeams();
+    rett = testtm.getTeams();
 
-    if ( rett.size() > 0 &&
-         rett.at( 0 ).teamid > 0 &&
-         rett.at( 0 ).orgid > 0 &&
-         !rett.at( 0 ).name.empty() ) {
-        runtest.pass( "taskingManager::getTeams()" );
+    if (rett.size() > 0 && rett.at(0).teamid > 0 && rett.at(0).orgid > 0 &&
+        !rett.at(0).name.empty()) {
+        runtest.pass("taskingManager::getTeams()");
     } else {
-        runtest.fail( "taskingManager::getTeams()" );
+        runtest.fail("taskingManager::getTeams()");
     }
 
-    retl = testtm.getTeamMembers( 1, true );
+    retl = testtm.getTeamMembers(1, true);
 
-    if ( retl.size() >= 0 ) {
-        runtest.pass( "taskingManager::getTeamMembers()" );
+    if (retl.size() >= 0) {
+        runtest.pass("taskingManager::getTeamMembers()");
     } else {
-        runtest.fail( "taskingManager::getTeamMembers()" );
+        runtest.fail("taskingManager::getTeamMembers()");
     }
 
     retp = testtm.getProjects();
 
-    if ( retp.size() > 0 ) {
-        runtest.pass( "taskingManager::getProjects()" );
+    if (retp.size() > 0) {
+        runtest.pass("taskingManager::getProjects()");
     } else {
-        runtest.fail( "taskingManager::getProjects()" );
+        runtest.fail("taskingManager::getProjects()");
     }
 
-    retl = testtm.getProjectTeams( 1 );
+    retl = testtm.getProjectTeams(1);
 
-    if ( retl.size() >= 0 ) {
-        runtest.pass( "taskingManager::getProjectTeams()" );
+    if (retl.size() >= 0) {
+        runtest.pass("taskingManager::getProjectTeams()");
     } else {
-        runtest.fail( "taskingManager::getProjectTeams()" );
+        runtest.fail("taskingManager::getProjectTeams()");
     }
 }

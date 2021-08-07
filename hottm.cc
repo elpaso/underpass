@@ -18,102 +18,97 @@
 //
 
 #include <array>
-#include <vector>
-#include <memory>
-#include <string>
-#include <iostream>
-#include <pqxx/pqxx>
 #include <boost/format.hpp>
+#include <iostream>
+#include <memory>
+#include <pqxx/pqxx>
+#include <string>
+#include <vector>
 
 #include "hottm.hh"
 
-namespace tmdb
-{
+namespace tmdb {
 
 bool
-TaskingManager::connect( const std::string &database )
-{
-    auto databaseName { database };
+TaskingManager::connect(const std::string &database) {
+    auto databaseName{database};
 
-    if ( databaseName.empty() ) {
+    if (databaseName.empty()) {
         databaseName = "tmsnap";
     }
 
     try {
         std::string args = "dbname = " + databaseName;
-        db = std::make_unique<pqxx::connection>( args );
+        db = std::make_unique<pqxx::connection>(args);
 
-        if ( db->is_open() ) {
-            worker = std::make_unique<pqxx::work>( *db );
+        if (db->is_open()) {
+            worker = std::make_unique<pqxx::work>(*db);
             return true;
         } else {
             return false;
         }
-    } catch ( const std::exception &e ) {
+    } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return false;
     }
 }
 
 std::vector<TMTeam>
-TaskingManager::getTeams( TaskingManagerIdType teamid )
-{
+TaskingManager::getTeams(TaskingManagerIdType teamid) {
     std::vector<TMTeam> teams;
 
     std::string sql = "SELECT id,organisation_id,name FROM teams";
 
-    if ( teamid > 0 ) {
-        sql += " WHERE id=" + std::to_string( teamid );
+    if (teamid > 0) {
+        sql += " WHERE id=" + std::to_string(teamid);
     }
 
     std::cout << "QUERY: " << sql << std::endl;
-    pqxx::result result = worker->exec( sql );
+    pqxx::result result = worker->exec(sql);
 
     pqxx::result::const_iterator it;
 
-    for ( it = result.begin(); it != result.end(); ++it ) {
-        TMTeam team( it );
-        teams.push_back( team );
+    for (it = result.begin(); it != result.end(); ++it) {
+        TMTeam team(it);
+        teams.push_back(team);
     }
 
     return teams;
 }
 
 std::vector<long>
-TaskingManager::getTeamMembers( TaskingManagerIdType teamid, bool active )
-{
+TaskingManager::getTeamMembers(TaskingManagerIdType teamid, bool active) {
     std::vector<long> members;
 
     std::string sql = "SELECT user_id FROM team_members WHERE team_id=";
-    sql += std::to_string( teamid );
+    sql += std::to_string(teamid);
 
-    if ( active ) {
+    if (active) {
         sql += " AND active='t'";
     }
 
-    pqxx::result result = worker->exec( sql );
+    pqxx::result result = worker->exec(sql);
     // pqxx::array_parser parser = result[0][0].as_array();
     pqxx::result::const_iterator rit;
 
-    for ( rit = result.begin(); rit != result.end(); ++rit ) {
-        //members->push_back(std::stol(rit));
-        long foo = rit[0].as( long( 0 ) );
-        members.push_back( foo );
+    for (rit = result.begin(); rit != result.end(); ++rit) {
+        // members->push_back(std::stol(rit));
+        long foo = rit[0].as(long(0));
+        members.push_back(foo);
     }
 
     return members;
 }
 
 std::vector<TMUser>
-TaskingManager::getUsers( TaskingManagerIdType userId )
-{
+TaskingManager::getUsers(TaskingManagerIdType userId) {
     std::vector<TMUser> users;
 
     // Extract data from TM DB
     // FIXME: missing fields in TM schema:
     // - home
     // - osm_registration
-    std::string sql { R"sql(
+    std::string sql{R"sql(
                       SELECT
                         u.id,
                         u.name,
@@ -130,70 +125,69 @@ TaskingManager::getUsers( TaskingManagerIdType userId )
                       FROM users u
                       )sql"};
 
-    if ( userId > 0 ) {
-        sql += " WHERE u.id = " + std::to_string( userId );
+    if (userId > 0) {
+        sql += " WHERE u.id = " + std::to_string(userId);
     }
 
     std::cout << "QUERY: " << sql << std::endl;
-    pqxx::result result = worker->exec( sql );
+    pqxx::result result = worker->exec(sql);
     std::cout << "SIZE: " << result.size() << std::endl;
 
     pqxx::result::const_iterator it;
 
-    for ( it = result.begin(); it != result.end(); ++it ) {
-        TMUser user( it );
-        users.push_back( user );
+    for (it = result.begin(); it != result.end(); ++it) {
+        TMUser user(it);
+        users.push_back(user);
     }
 
     return users;
 };
 
 std::vector<TMProject>
-TaskingManager::getProjects( TaskingManagerIdType projectid )
-{
+TaskingManager::getProjects(TaskingManagerIdType projectid) {
     std::vector<TMProject> projects;
 
-    std::string sql = "SELECT id,status,created,priority,author_id,mapper_level,total_tasks,tasks_mapped,tasks_validated FROM projects";
+    std::string sql = "SELECT "
+                      "id,status,created,priority,author_id,mapper_level,total_"
+                      "tasks,tasks_mapped,tasks_validated FROM projects";
 
-    if ( projectid > 0 ) {
-        sql += " WHERE id=" + std::to_string( projectid );
+    if (projectid > 0) {
+        sql += " WHERE id=" + std::to_string(projectid);
     }
 
     std::cout << "QUERY: " << sql << std::endl;
-    pqxx::result result = worker->exec( sql );
+    pqxx::result result = worker->exec(sql);
     std::cout << "SIZE: " << result.size() << std::endl;
 
     pqxx::result::const_iterator it;
 
-    for ( it = result.begin(); it != result.end(); ++it ) {
-        TMProject project( it );
-        projects.push_back( project );
+    for (it = result.begin(); it != result.end(); ++it) {
+        TMProject project(it);
+        projects.push_back(project);
     }
 
     return projects;
 }
 
-pqxx::work*
-TaskingManager::getWorker() const
-{
+pqxx::work *
+TaskingManager::getWorker() const {
     return worker.get();
 }
 
 std::vector<long>
-TaskingManager::getProjectTeams( long projectid )
-{
+TaskingManager::getProjectTeams(long projectid) {
     std::vector<TaskingManagerIdType> teams;
 
     std::string sql = "SELECT team_id FROM project_teams WHERE project_id=";
-    sql += std::to_string( projectid );
+    sql += std::to_string(projectid);
 
-    pqxx::result result = worker->exec( sql );
+    pqxx::result result = worker->exec(sql);
     // pqxx::array_parser parser = result[0][0].as_array();
     pqxx::result::const_iterator rit;
 
-    for ( rit = result.begin(); rit != result.end(); ++rit ) {
-        const TaskingManagerIdType foo = rit[0].as( TaskingManagerIdType( 0 ) );
-        teams.push_back( foo );
+    for (rit = result.begin(); rit != result.end(); ++rit) {
+        const TaskingManagerIdType foo = rit[0].as(TaskingManagerIdType(0));
+        teams.push_back(foo);
     }
 
     return teams;
