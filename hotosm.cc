@@ -185,7 +185,7 @@ QueryTM::QueryTM(void) {}
 // Tasking Manager Classes
 QueryTM::~QueryTM(void) {}
 
-long
+std::shared_ptr<std::vector<long>>
 QueryTM::getProjects(long userid) {
     auto projects = std::make_shared<std::vector<long>>();
 
