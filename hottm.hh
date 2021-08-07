@@ -42,28 +42,53 @@ using namespace boost::gregorian;
 #include "hottm/tmteams.hh"
 #include "hottm/tmprojects.hh"
 
-namespace tmdb {
+namespace tmdb
+{
 
 class TaskingManager
 {
-public:
-    bool connect(std::string &database);
-    /**
-     * @brief Retrieve the users from TM DB.
-     * @param userId, optional user id, default value of 0 synchronizes all users.
-     * @return a vector of TMUser objects.
-     */
-    std::vector<TMUser> getUsers( TaskingManagerIdType userId = 0 );
-    std::vector<TMTeam> getTeams(void) { return getTeams(0); };
-    std::vector<TMTeam> getTeams(long teamid);
-    std::vector<TaskingManagerIdType> getTeamMembers(long teamid, bool active);
-    std::vector<TMProject> getProjects(void) { return getProjects(0); };
-    std::vector<TaskingManagerIdType> getProjectTeams(long projectid);
-    std::vector<TMProject> getProjects(TaskingManagerIdType projectid);
+    public:
+
+        bool connect( const std::string &database );
+
+        /**
+         * @brief Retrieve the users from TM DB.
+         * @param userId, optional user id, default value of 0 synchronizes all users.
+         * @return a vector of TMUser objects.
+         */
+        std::vector<TMUser> getUsers( TaskingManagerIdType userId = 0 );
+
+        std::vector<TMTeam>
+        getTeams( void )
+        {
+            return getTeams( 0 );
+        };
+
+        std::vector<TMTeam> getTeams( long teamid );
+
+        std::vector<TaskingManagerIdType> getTeamMembers( long teamid, bool active );
+
+        std::vector<TMProject>
+        getProjects( void )
+        {
+            return getProjects( 0 );
+        };
+
+        std::vector<TaskingManagerIdType> getProjectTeams( long projectid );
+
+        std::vector<TMProject> getProjects( TaskingManagerIdType projectid );
+
+        /**
+         * @brief getWorker
+         * @return the (possibly NULL) pointer to the worker, mainly for testing purposes.
+         */
+        pqxx::work*getWorker() const;
 
 private:
-    pqxx::connection *db = nullptr;
-    pqxx::work *worker = nullptr;
+
+        std::unique_ptr<pqxx::connection> db;
+        std::unique_ptr<pqxx::work> worker;
+
 };
 
 } // EOF tmdb namespace

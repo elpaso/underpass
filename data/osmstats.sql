@@ -20,8 +20,6 @@ COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial
 
 SET default_tablespace = '';
 
-SET default_table_access_method = heap;
-
 CREATE TABLE public.changesets (
     id bigint NOT NULL,
     editor text,
@@ -86,6 +84,7 @@ CREATE TABLE public.users (
     tasks_validated integer,
     tasks_invalidated integer,
     projects_mapped integer[],
+    mapping_level integer,
     gender int4,
     "role" int4,
     home public.geometry(Point,4326)

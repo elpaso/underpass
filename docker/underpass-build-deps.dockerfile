@@ -29,9 +29,9 @@ RUN apt-get update \
         dejagnu \
         wget \
         unzip \
-        libxml++2.6-dev && rm -rf /var/lib/apt/lists/* \
         vim \
         wait-for-it \
+        libxml++2.6-dev \
     && mkdir /libpqxx && cd /libpqxx \
     && wget https://github.com/jtv/libpqxx/archive/7.3.1.zip \
     && unzip 7.3.1.zip \

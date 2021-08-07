@@ -61,7 +61,7 @@ class QueryDB
         humanitarian, landuse, natural, power,
         sport, transportation, water, language, all };
     enum action { changesets, added, modified, deleted, totals };
-    
+
     // QueryDB(const std::string &database);
     QueryDB(void);
     ~QueryDB(void);
@@ -90,7 +90,7 @@ class QueryChanges : public QueryDB
 // with the optional linestring extension.
 class QueryStats : public QueryDB
 {
-  public:    
+  public:
     QueryStats(void);
     ~QueryStats(void);
 
@@ -119,7 +119,7 @@ class QueryTM : public QueryDB
 
     int getTasksMapped(long userid);
     int getTasksValidated(long userid);
-    
+
     // lastUpdated
     // ptime &dataRegistered
 };

@@ -119,6 +119,7 @@ class RawUser
     std::string name;           ///< The users OSM username
 };
 
+
 /// \class RawHashtag
 /// \brief Stores the data from the raw hashtag table
 ///
@@ -210,7 +211,7 @@ class QueryOSMStats : public apidb::QueryStats
     }
 
     /**
-     * @brief The SyncResult struct represents the result of a synchronization operation.
+     * \brief The SyncResult struct represents the result of a synchronization operation.
      */
     struct SyncResult
     {
@@ -224,9 +225,9 @@ class QueryOSMStats : public apidb::QueryStats
     };
 
     /**
-     * @brief syncUsers synchronize users from TM DB into Underpass DB
-     * @param users list of users from TM DB to be synced.
-     * @return a SyncResult object
+     * \brief syncUsers synchronize users from TM DB into Underpass DB
+     * \param users list of users from TM DB to be synced.
+     * \return a SyncResult object
      */
     SyncResult syncUsers( const std::vector<TMUser>& users );
 

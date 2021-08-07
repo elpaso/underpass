@@ -21,12 +21,13 @@ AUTOMAKE_OPTIONS = dejagnu
 
 AM_CPPFLAGS = -I$(top_srcdir) \
 	-I$(top_srcdir)/hottm \
-	-I$(top_srcdir)/osmstats
+        -I$(top_srcdir)/usersync
 
 check_PROGRAMS =  \
 	val-test \
 	tm-test \
-	under-test
+        under-test \
+        usersync-test
 #	rep-test
 #	stats-test
 #	change-test
@@ -48,7 +49,7 @@ AM_CXXFLAGS = \
         -DTOPSRCDIR=\"$(top_srcdir)\" \
         -DSRCDIR=\"$(srcdir)\"
 
-# _test_SOURCES = geo-test.cc
+# geo_test_SOURCES = geo-test.cc
 # geo_test_LDFLAGS = -L../..
 # geo_test_CPPFLAGS = -DDATADIR=\"$(top_srcdir)\" -I$(top_srcdir)
 # geo_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
@@ -69,9 +70,9 @@ under_test_CPPFLAGS = -DDATADIR=\"$(top_srcdir)\" -I$(top_srcdir)
 under_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
 
 # Test the OSM DB classes
-hotosm_test_SOURCES = hotosm-test.cc
-hotosm_test_LDFLAGS = -L../..
-hotosm_test_LDADD = -lpqxx -lunderpass  $(BOOST_LIBS)
+#hotosm_test_SOURCES = hotosm-test.cc
+#hotosm_test_LDFLAGS = -L../..
+#hotosm_test_LDADD = -lpqxx -lunderpass  $(BOOST_LIBS)
 
 # Test the TM DB classes
 tm_test_SOURCES = tm-test.cc
@@ -84,9 +85,16 @@ tm_test_LDADD = -lpqxx -lunderpass  $(BOOST_LIBS)
 #stats_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
 
 # Test the Changeset class
-change_test_SOURCES = change-test.cc
-change_test_CPPFLAGS = -DDATADIR=\"$(srcdir)\" -I$(top_srcdir)
-change_test_LDFLAGS = -L../..
-change_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
+#change_test_SOURCES = change-test.cc
+#change_test_CPPFLAGS = -DDATADIR=\"$(srcdir)\" -I$(top_srcdir)
+#change_test_LDFLAGS = -L../..
+#change_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
+
+# Test the usersync class
+usersync_test_SOURCES = usersync-test.cc
+usersync_test_CPPFLAGS = -DDATADIR=\"$(srcdir)\" -I$(top_srcdir)
+usersync_test_LDFLAGS = -L../..
+usersync_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
+
 
 RUNTESTFLAGS = -xml

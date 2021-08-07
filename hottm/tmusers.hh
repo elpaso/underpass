@@ -41,17 +41,18 @@ using namespace boost::gregorian;
 
 namespace tmdb {
 
-
-class TMUser
+/**
+* \brief The TMUser class represents a user with information extracted from the TM DB.
+*/
+struct TMUser
 {
-
-  public:
 
   /**
    * @brief The Gender enum maps the TM database numeric gender.
    */
   enum class Gender: int
   {
+    UNSET = 0,
     MALE = 1,
     FEMALE = 2,
     SELF_DESCRIBE = 3,
@@ -63,6 +64,7 @@ class TMUser
    */
   enum class Role: int
   {
+    UNSET = 0,
     READ_ONLY = 1,
     MAPPER = 2,
     ADMIN = 3
@@ -73,14 +75,17 @@ class TMUser
    */
   enum class MappingLevel: int
   {
+    UNSET = 0,
     BEGINNER = 1,
     INTERMEDIATE = 2,
     ADVANCED = 3
   };
 
-    TMUser(pqxx::result::const_iterator &row);
+  TMUser() = default;
+  TMUser(pqxx::result::const_iterator &row);
 
-//protected:
+  bool operator==(const TMUser& other) const;
+
     TaskingManagerIdType id;
 //     validation_message boolean NOT NULL,
     std::string name;
