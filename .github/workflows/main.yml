@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Create Doxyfile
-      run: ./autogen.sh && ./configure && make doc/Doxyfile
+      run: ./autogen.sh && ./configure
 
     - name: Doxygen Action
       uses: mattnotmitt/doxygen-action@v1.1.0
