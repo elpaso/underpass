@@ -25,10 +25,11 @@ AM_CPPFLAGS = -I$(top_srcdir) \
 
 check_PROGRAMS = \
 	tm-test \
-    under-test \
-    usersync-test \
+        under-test \
+        usersync-test \
 	under-test \
-	pq-test
+        pq-test \
+        replication-test
 
 #	rep-test
 #	stats-test
@@ -102,6 +103,12 @@ usersync_test_SOURCES = usersync-test.cc
 usersync_test_CPPFLAGS = -DDATADIR=\"$(srcdir)\" -I$(top_srcdir)
 usersync_test_LDFLAGS = -L../..
 usersync_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
+
+# Replication test
+replication_test_SOURCES = replication-test.cc
+replication_test_CPPFLAGS = -DDATADIR=\"$(srcdir)\" -I$(top_srcdir)
+replication_test_LDFLAGS = -L../..
+replication_test_LDADD = -lpqxx -lunderpass $(BOOST_LIBS)
 
 
 RUNTESTFLAGS = -xml

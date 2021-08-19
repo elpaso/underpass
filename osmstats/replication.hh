@@ -53,6 +53,7 @@ namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
 
 #include "data/threads.hh"
 #include "osmstats/changeset.hh"
+using namespace changeset;
 #include "timer.hh"
 // #include "osmstats/osmstats.hh"
 
@@ -261,7 +262,7 @@ class Planet
 /// \class Replication
 /// \brief Handle replication files from the OSM planet server.
 ///
-/// This class handfles identifying the right replication file to download,
+/// This class handles identifying the right replication file to download,
 /// and downloading it.
 class Replication
 {
@@ -295,12 +296,15 @@ class Replication
     bool mergeToDB();
 
     std::vector<StateFile> states; ///< Stored state.txt files
+    const ChangeSetFile &getChangeset() const;
+
   private:
-    std::string pserver; ///< The replication file server
-    int port;            ///< Network port for the server
-    ptime last_run;      ///< Timestamp of the replication file
-    long sequence;       ///< Sequence number of the replication
-    int version;         ///< Version number of the replication
+    std::string pserver;     ///< The replication file server
+    int port;                ///< Network port for the server
+    ptime last_run;          ///< Timestamp of the replication file
+    long sequence;           ///< Sequence number of the replication
+    int version;             ///< Version number of the replication
+    ChangeSetFile changeset; ///< Changeset read by readChanges()
 };
 
 struct membuf : std::streambuf {
