@@ -1,6 +1,9 @@
 #!/bin/bash
 # Import Haiti and Dom. Rep. PBF for testing
 
+# Extract generated with:
+# osmconvert haiti-and-domrep-latest.osm.pbf -b=-72.35024453388996335,18.56998067269670827,-72.236107060693314,18.605673840109794531 -o=haiti-and-domrep-latest-extract.osm.pbf
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # To regenerate the DB:
@@ -29,6 +32,6 @@ osm2pgsql \
     --extra-attributes \
     --create \
     -r pbf \
-    ${SCRIPT_DIR}/haiti-and-domrep-latest.osm.pbf
+    ${SCRIPT_DIR}/haiti-and-domrep-latest-extract.osm.pbf
 
 
