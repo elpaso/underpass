@@ -53,9 +53,10 @@ namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
 
 #include "data/threads.hh"
 #include "osmstats/changeset.hh"
-using namespace changeset;
 #include "timer.hh"
 // #include "osmstats/osmstats.hh"
+#include "osmchange.hh"
+using namespace osmchange;
 
 namespace net = boost::asio;      // from <boost/asio.hpp>
 namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
@@ -102,9 +103,9 @@ class StateFile
     StateFile(void)
     {
         //timestamp = boost::posix_time::second_clock::local_time();
-        timestamp = boost::posix_time::not_a_date_time;
-        created_at = boost::posix_time::not_a_date_time;
-        closed_at = boost::posix_time::not_a_date_time;
+        timestamp == boost::posix_time::not_a_date_time;
+        created_at == boost::posix_time::not_a_date_time;
+        closed_at == boost::posix_time::not_a_date_time;
         sequence = 0;
     };
 
@@ -262,7 +263,7 @@ class Planet
 /// \class Replication
 /// \brief Handle replication files from the OSM planet server.
 ///
-/// This class handles identifying the right replication file to download,
+/// This class handfles identifying the right replication file to download,
 /// and downloading it.
 class Replication
 {
@@ -295,16 +296,15 @@ class Replication
     /// Add this replication data to the changeset database
     bool mergeToDB();
 
-    std::vector<StateFile> states; ///< Stored state.txt files
-    const ChangeSetFile &getChangeset() const;
+    OsmChangeFile readOsmChangeFile(const std::string &osc);
 
+    std::vector<StateFile> states; ///< Stored state.txt files
   private:
-    std::string pserver;     ///< The replication file server
-    int port;                ///< Network port for the server
-    ptime last_run;          ///< Timestamp of the replication file
-    long sequence;           ///< Sequence number of the replication
-    int version;             ///< Version number of the replication
-    ChangeSetFile changeset; ///< Changeset read by readChanges()
+    std::string pserver; ///< The replication file server
+    int port;            ///< Network port for the server
+    ptime last_run;      ///< Timestamp of the replication file
+    long sequence;       ///< Sequence number of the replication
+    int version;         ///< Version number of the replication
 };
 
 struct membuf : std::streambuf {

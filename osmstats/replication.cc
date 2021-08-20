@@ -205,6 +205,7 @@ StateFile::dump(void)
 bool
 Replication::readChanges(const std::string &file)
 {
+    changeset::ChangeSetFile changeset;
     std::ifstream stream;
     stream.open(file, std::ifstream::in);
     changeset.readXML(stream);
@@ -219,10 +220,10 @@ Replication::mergeToDB()
     return false;
 }
 
-const ChangeSetFile &
-Replication::getChangeset() const
+OsmChangeFile
+Replication::readOsmChangeFile(const std::string &osc)
 {
-    return changeset;
+    return OsmChangeFile{osc};
 }
 
 std::shared_ptr<std::vector<std::string>> &

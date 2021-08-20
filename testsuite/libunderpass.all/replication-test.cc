@@ -126,10 +126,12 @@ main(int argc, char *argv[])
     const auto diff_path{base_path / "testdata" / "pbf" /
                          "haiti-and-domrep-2021-08-14" / "064.osc.gz"};
 
-    if (testreplication.readChanges(diff_path.c_str())) {
-        runtest.pass("Replication::readChanges()");
+    const auto osm_changes{
+        testreplication.readOsmChangeFile(diff_path.c_str())};
+    if (osm_changes.changes.size() > 0) {
+        runtest.pass("Replication::readOsmChangeFile()");
     } else {
-        runtest.fail("Replication::readChanges()");
+        runtest.fail("Replication::readOsmChangeFile()");
         exit(1);
     }
 }

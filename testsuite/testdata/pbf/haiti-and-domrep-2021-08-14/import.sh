@@ -4,7 +4,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # To regenerate the DB:
-dropdb --encoding=UTF8 pgsql_pbf_import_test
+dropdb pgsql_pbf_import_test
 
 
 createdb --encoding=UTF8 pgsql_pbf_import_test
@@ -30,5 +30,5 @@ osm2pgsql \
     --create \
     -r pbf \
     ${SCRIPT_DIR}/haiti-and-domrep-latest.osm.pbf
-    
-    
+
+
