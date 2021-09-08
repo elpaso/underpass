@@ -388,31 +388,33 @@ main(int argc, char *argv[])
 
             exit(-1);
         }
-        std::map<replication::frequency_t, std::string> frequency_tags;
-        frequency_tags[replication::minutely] = "minute";
-        frequency_tags[replication::hourly] = "hour";
-        frequency_tags[replication::daily] = "day";
-        frequency_tags[replication::changeset] = "changeset";
+
         std::thread mthread;
         std::thread cthread;
         if (!url.empty()) {
             last = url;
+            // Mame sure the path starts with a slash
+            if (last[0] != '/') {
+                last.insert(0, 1, '/');
+            }
             // remote.dump();
             mthread =
                 std::thread(threads::startMonitor, std::ref(remote),
                             std::ref(geou.boundary), std::ref(osmStatsDbUrl));
-            auto state = under.getState(frequency, url);
-            state->dump();
+
+            auto state = planet.fetchData(frequency, last, osmStatsDbUrl);
+
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // Why is this called here? Shouldn't it be done at the beginning, before starting any thread?
             if (!state->isValid()) {
-                auto tmp = planet.fetchData(frequency, last, osmStatsDbUrl);
-                if (state->isValid()) {
-                    std::cerr << "ERROR: No last path!" << std::endl;
-                    exit(-1);
-                }
+                std::cerr << "ERROR: Invalid state from path!" << last
+                          << std::endl;
+                exit(-1);
             }
-            auto state2 =
-                under.getState(replication::changeset, state->timestamp);
-            if (state2->isValid()) {
+
+            auto state2 = planet.fetchData(replication::changeset,
+                                           state->timestamp, osmStatsDbUrl);
+            if (!state2->isValid()) {
                 std::cerr << "WARNING: No changeset path in database!"
                           << std::endl;
                 auto tmp = planet.fetchData(replication::changeset,
