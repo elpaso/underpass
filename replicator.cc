@@ -393,7 +393,6 @@ main(int argc, char *argv[])
         frequency_tags[replication::hourly] = "hour";
         frequency_tags[replication::daily] = "day";
         frequency_tags[replication::changeset] = "changeset";
-        std::string path = frequency_tags[frequency] + "/";
         std::thread mthread;
         std::thread cthread;
         if (!url.empty()) {
