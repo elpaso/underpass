@@ -389,8 +389,16 @@ main(int argc, char *argv[])
             exit(-1);
         }
 
-        std::thread mthread;
-        std::thread cthread;
+        // 1. get the initial changeset sequence from timestamp or path
+        // 2. exit if not found
+        // 3. get the initial osmchanges sequence from timestamp or path
+        // 4. exit if not found
+        // 5. start osmchange monitoring thread
+        // 6. start changesets monitoring thread
+
+        std::thread osmchanges_updates_thread;
+        std::thread changesets_thread;
+
         if (!url.empty()) {
             last = url;
             // Mame sure the path starts with a slash
@@ -398,14 +406,12 @@ main(int argc, char *argv[])
                 last.insert(0, 1, '/');
             }
             // remote.dump();
-            mthread =
+            osmchanges_updates_thread =
                 std::thread(threads::startMonitor, std::ref(remote),
                             std::ref(geou.boundary), std::ref(osmStatsDbUrl));
 
             auto state = planet.fetchData(frequency, last, osmStatsDbUrl);
 
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // Why is this called here? Shouldn't it be done at the beginning, before starting any thread?
             if (!state->isValid()) {
                 std::cerr << "ERROR: Invalid state from path!" << last
                           << std::endl;
@@ -415,20 +421,15 @@ main(int argc, char *argv[])
             auto state2 = planet.fetchData(replication::changeset,
                                            state->timestamp, osmStatsDbUrl);
             if (!state2->isValid()) {
-                std::cerr << "WARNING: No changeset path in database!"
-                          << std::endl;
-                auto tmp = planet.fetchData(replication::changeset,
-                                            state->timestamp, osmStatsDbUrl);
-                if (tmp->isValid()) {
-                    std::cerr << "ERROR: No changeset path!" << std::endl;
-                    exit(-1);
-                }
+                std::cerr << "ERROR: No changeset path!" << std::endl;
+                exit(-1);
             }
+
             state2->dump();
             clast = pserver + "/" + datadir + "changesets/" + state2->path;
             remote.parse(clast);
             // remote.dump();
-            cthread =
+            changesets_thread =
                 std::thread(threads::startMonitor, std::ref(remote),
                             std::ref(geou.boundary), std::ref(osmStatsDbUrl));
         } else if (!starttime.is_not_a_date_time()) {
@@ -453,11 +454,11 @@ main(int argc, char *argv[])
         }
 
         log_info(_("Waiting..."));
-        if (cthread.joinable()) {
-            cthread.join();
+        if (changesets_thread.joinable()) {
+            changesets_thread.join();
         }
-        if (mthread.joinable()) {
-            mthread.join();
+        if (osmchanges_updates_thread.joinable()) {
+            osmchanges_updates_thread.join();
         }
         exit(0);
     }
