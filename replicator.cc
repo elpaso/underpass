@@ -175,13 +175,16 @@ main(int argc, char *argv[])
     ptime starttime(not_a_date_time);
     ptime endtime(not_a_date_time);
     std::string url;
-    std::string osmStatsDbUrl = "localhost/osmstats";
+    std::string osmstats_db_url = "localhost/osmstats";
     // std::string pserver = "https://download.openstreetmap.fr";
     // std::string pserver = "https://planet.openstreetmap.org";
     std::string pserver = "https://planet.maps.mail.ru";
+    // Unddrpass DB server connection: HOST or
+    // USER:PASSSWORD@HOST/DATABASENAME
+    std::string underpass_db_url = "localhost/underpass";
     // Tasking Manager DB server connection: HOST or
     // USER:PASSSWORD@HOST/DATABASENAME
-    std::string tmDbUrl = "localhost";
+    std::string tm_db_url = "localhost/taskingmanager";
     // Tasking Manager user sync frequency in seconds (-1 -> disabled, 0 ->
     // single shot, > 0 -> interval)
     long tmusersfrequency{-1};
@@ -195,12 +198,14 @@ main(int argc, char *argv[])
         opts::options_description desc("Allowed options");
         // clang-format off
         desc.add_options()("help,h", "display help")
-            ("server,s", opts::value<std::string>(), "Database server (defaults to localhost)")
-            ("tmserver", opts::value<std::string>(), "Tasking Manager database server (defaults to localhost), "
+            ("server,s", opts::value<std::string>(), "Database server (defaults to localhost/osmstats)")
+            ("tmserver", opts::value<std::string>(), "Tasking Manager database server (defaults to localhost/taskingmanager), "
+                                                     "can be a hostname or a full connection string USER:PASSSWORD@HOST/DATABASENAME")
+            ("upserver", opts::value<std::string>(), "Underpass database server (defaults to localhost/underpass), "
                                                      "can be a hostname or a full connection string USER:PASSSWORD@HOST/DATABASENAME")
             ("tmusersfrequency", opts::value<std::string>(), "Frequency in seconds for the Tasking Manager database users "
                                                              "synchronization: -1 -> disabled, 0 -> single shot, > 0 interval in seconds")
-            ("planet,p", opts::value<std::string>(), "Replication server (defaults to planet.openstreetmap.org)")
+            ("planet,p", opts::value<std::string>(), "Replication server (defaults to planet.maps.mail.ru)")
             ("url,u", opts::value<std::string>(), "Starting URL (ex. 000/075/000)")("monitor,m", "Starting monitor")
             ("frequency,f", opts::value<std::string>(), "Update frequency (hour, daily), default minute)")
             ("timestamp,t", opts::value<std::vector<std::string>>(), "Starting timestamp")
@@ -229,9 +234,14 @@ main(int argc, char *argv[])
         return 1;
     }
 
+    // Underpass users options
+    if (vm.count("upserver")) {
+        underpass_db_url = vm["upserver"].as<std::string>();
+    }
+
     // TM users options
     if (vm.count("tmserver")) {
-        tmDbUrl = vm["tmserver"].as<std::string>();
+        tm_db_url = vm["tmserver"].as<std::string>();
     }
 
     if (vm.count("tmusersfrequency")) {
@@ -263,7 +273,7 @@ main(int argc, char *argv[])
     }
 
     if (vm.count("server")) {
-        osmStatsDbUrl = vm["server"].as<std::string>();
+        osmstats_db_url = vm["server"].as<std::string>();
     }
     // osmstats::QueryOSMStats ostats;
     // ostats.connect(dburl);
@@ -297,8 +307,8 @@ main(int argc, char *argv[])
         tmUserSyncMonitorThread(nullptr, stopTmUserSyncMonitor);
     if (tmusersfrequency >= 0) {
         tmUserSyncMonitorThread.reset(new std::thread(
-            threads::threadTMUsersSync, std::ref(tmUserSyncIsActive), tmDbUrl,
-            osmStatsDbUrl, tmusersfrequency));
+            threads::threadTMUsersSync, std::ref(tmUserSyncIsActive), tm_db_url,
+            osmstats_db_url, tmusersfrequency));
     }
 
     // End of Tasking Manager user sync setup
@@ -311,7 +321,7 @@ main(int argc, char *argv[])
         changeset->readChanges(file);
         changeset->areaFilter(geou.boundary);
         osmstats::QueryOSMStats ostats;
-        ostats.connect(osmStatsDbUrl);
+        ostats.connect(osmstats_db_url);
         for (auto it = std::begin(changeset->changes);
              it != std::end(changeset->changes); ++it) {
             ostats.applyChange(*it->get());
@@ -368,8 +378,8 @@ main(int argc, char *argv[])
     // ostats.connect();
     underpass::Underpass under;
     std::string upurl;
-    if (!osmStatsDbUrl.empty()) {
-        upurl = osmStatsDbUrl.substr(0, osmStatsDbUrl.find('/'));
+    if (!osmstats_db_url.empty()) {
+        upurl = osmstats_db_url.substr(0, osmstats_db_url.find('/'));
         upurl += "/underpass";
     } else {
         upurl = "localhost/underpass";
@@ -408,9 +418,9 @@ main(int argc, char *argv[])
             // remote.dump();
             osmchanges_updates_thread =
                 std::thread(threads::startMonitor, std::ref(remote),
-                            std::ref(geou.boundary), std::ref(osmStatsDbUrl));
+                            std::ref(geou.boundary), std::ref(osmstats_db_url));
 
-            auto state = planet.fetchData(frequency, last, osmStatsDbUrl);
+            auto state = planet.fetchData(frequency, last, underpass_db_url);
 
             if (!state->isValid()) {
                 std::cerr << "ERROR: Invalid state from path!" << last
@@ -419,7 +429,7 @@ main(int argc, char *argv[])
             }
 
             auto state2 = planet.fetchData(replication::changeset,
-                                           state->timestamp, osmStatsDbUrl);
+                                           state->timestamp, underpass_db_url);
             if (!state2->isValid()) {
                 std::cerr << "ERROR: No changeset path!" << std::endl;
                 exit(-1);
@@ -431,13 +441,13 @@ main(int argc, char *argv[])
             // remote.dump();
             changesets_thread =
                 std::thread(threads::startMonitor, std::ref(remote),
-                            std::ref(geou.boundary), std::ref(osmStatsDbUrl));
+                            std::ref(geou.boundary), std::ref(osmstats_db_url));
         } else if (!starttime.is_not_a_date_time()) {
             // No URL, use the timestamp
             auto state = under.getState(frequency, starttime);
             if (state->isValid()) {
                 auto tmp =
-                    planet.fetchData(frequency, starttime, osmStatsDbUrl);
+                    planet.fetchData(frequency, starttime, underpass_db_url);
                 if (tmp->path.empty()) {
                     std::cerr << "ERROR: No last path!" << std::endl;
                     exit(-1);

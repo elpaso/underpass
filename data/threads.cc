@@ -110,14 +110,13 @@ startMonitor(const replication::RemoteURL &inr, const multipolygon_t &poly,
     boost::dll::fs::path lib_path(plugins);
     boost::function<plugin_t> creator;
     try {
-	creator = boost::dll::import_alias<plugin_t>(
-	    lib_path / "libhotosm", "create_plugin",
-	    boost::dll::load_mode::append_decorations
-	    );
-	    log_debug(_("Loaded plugin hotosm!"));
-    } catch (std::exception& e) {
-	    log_debug(_("Couldn't load plugin! %1%"), e.what());
-	    exit(0);
+        creator = boost::dll::import_alias<plugin_t>(
+            lib_path / "libhotosm", "create_plugin",
+            boost::dll::load_mode::append_decorations);
+        log_debug(_("Loaded plugin hotosm!"));
+    } catch (std::exception &e) {
+        log_debug(_("Couldn't load plugin! %1%"), e.what());
+        exit(0);
     }
     auto validator = creator();
     while (mainloop) {
@@ -377,7 +376,7 @@ threadOsmChange(const replication::RemoteURL &remote,
     for (auto it = std::begin(osmchanges->changes);
          it != std::end(osmchanges->changes); ++it) {
         osmchange::OsmChange *change = it->get();
-	// change->dump();
+        // change->dump();
         for (auto it = std::begin(change->nodes); it != std::end(change->nodes);
              ++it) {
             osmobjects::OsmNode *node = it->get();
@@ -410,17 +409,17 @@ threadOsmChange(const replication::RemoteURL &remote,
     auto nodeval = osmchanges->validateNodes(poly, plugin);
     // std::cerr << "SIZE " << nodeval->size() << std::endl;
     for (auto it = nodeval->begin(); it != nodeval->end(); ++it) {
-	ostats.applyChange(*it->get());
+        ostats.applyChange(*it->get());
     }
     timer.endTimer("validate nodes");
     timer.startTimer();
     auto wayval = osmchanges->validateWays(poly, plugin);
     // std::cerr << "SIZE " << wayval->size() << std::endl;
     for (auto it = wayval->begin(); it != wayval->end(); ++it) {
-	ostats.applyChange(*it->get());
+        ostats.applyChange(*it->get());
     }
     timer.endTimer("validate ways");
-    
+
     return osmchanges;
 }
 
