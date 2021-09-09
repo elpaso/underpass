@@ -89,13 +89,15 @@ namespace threads {
 // Starting with this URL, download the file, incrementing
 void
 startMonitor(const replication::RemoteURL &inr, const multipolygon_t &poly,
-             const std::string &dburl)
+             const replicatorconfig::ReplicatorConfig &config)
 {
-    underpass::Underpass under;
-    under.connect(dburl);
 
     osmstats::QueryOSMStats ostats;
-    ostats.connect(dburl);
+    if (!ostats.connect(config.osmstats_db_url)) {
+        log_error(
+            _("Could not connect to osmstats DB, aborting monitoring thread!"));
+        return;
+    }
 
     replication::RemoteURL remote = inr;
     auto planet = std::make_shared<replication::Planet>(remote);
@@ -613,14 +615,13 @@ threadStateFile(ssl::stream<tcp::socket> &stream, const std::string &file)
 
 void
 threadTMUsersSync(std::atomic<bool> &tmUserSyncIsActive,
-                  const std::string &tmDbUrl, const std::string &osmStatsDbUrl,
-                  long tmusersfrequency)
+                  const replicatorconfig::ReplicatorConfig &config)
 {
     // There is a lot of DB URI manipulations in this program, if the URL
     // contains a plain hostname we need to add a database name too
     // FIXME: handle all DB URIs in a consistent and documented way
-    auto osmStatsDbUrlWithDbName{osmStatsDbUrl};
-    if (osmStatsDbUrl.find('/') == std::string::npos) {
+    auto osmStatsDbUrlWithDbName{config.osmstats_db_url};
+    if (config.osmstats_db_url.find('/') == std::string::npos) {
         osmStatsDbUrlWithDbName.append("/osmstats");
     }
     auto osmStats{QueryOSMStats()};
@@ -633,8 +634,8 @@ threadTMUsersSync(std::atomic<bool> &tmUserSyncIsActive,
 
     TaskingManager taskingManager;
     // FIXME: handle all DB URIs in a consistent and documented way
-    auto tmDbUrlWithDbName{tmDbUrl};
-    if (tmDbUrl.find('/') == std::string::npos) {
+    auto tmDbUrlWithDbName{config.taskingmanager_db_url};
+    if (config.taskingmanager_db_url.find('/') == std::string::npos) {
         tmDbUrlWithDbName.append("/taskingmanager");
     }
 
@@ -643,6 +644,8 @@ threadTMUsersSync(std::atomic<bool> &tmUserSyncIsActive,
                   tmDbUrlWithDbName);
         return;
     }
+
+    const auto tmusersfrequency{config.taskingmanager_users_update_frequency};
 
     do {
 

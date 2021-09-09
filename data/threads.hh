@@ -58,6 +58,7 @@ using tcp = net::ip::tcp;
 
 #include "osmstats/osmstats.hh"
 #include "osmstats/replication.hh"
+#include "replicatorconfig.hh"
 #include "validate/validate.hh"
 #include <ogr_geometry.h>
 
@@ -92,7 +93,7 @@ startStateThreads(const std::string &base, const std::string &file);
 /// minutely change files and processes them.
 extern void
 startMonitor(const replication::RemoteURL &remote, const multipolygon_t &poly,
-             const std::string &dburl);
+             const replicatorconfig::ReplicatorConfig &config);
 
 /// Updates the states table in the Underpass database
 extern std::shared_ptr<replication::StateFile>
@@ -140,8 +141,7 @@ threadOSM(const std::string &database, ptime &timestamp);
  */
 extern void
 threadTMUsersSync(std::atomic<bool> &tmUserSyncIsActive,
-                  const std::string &tmDbUrl, const std::string &osmStatsDbUrl,
-                  long tmusersfrequency = -1);
+                  const replicatorconfig::ReplicatorConfig &config);
 
 } // namespace threads
 
