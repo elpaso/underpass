@@ -26,7 +26,7 @@ check_PROGRAMS = \
 	pq-test \
 	change-test \
 	val-test \
-	yaml-test
+        yaml-test \
         replication-test
 
 AM_CPPFLAGS = -I$(top_srcdir) -DDATADIR=\"$(top_srcdir)\" -I$(top_srcdir)/hottm
